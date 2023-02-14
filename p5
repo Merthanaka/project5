@@ -1,0 +1,74 @@
+using System;
+
+namespace RandomNumberGenerators
+{
+    interface IDistribution
+    {
+        long NextValue(long minValue, long maxValue);
+    }
+
+    class UniformDistribution : IDistribution
+    {
+        public long NextValue(long minValue, long maxValue)
+        {
+            return minValue + (long)(new Random().NextDouble() * (maxValue - minValue));
+        }
+    }
+
+    class LCG
+    {
+        private long seed;
+        private long a;
+        private long c;
+        private long m;
+
+        public LCG(long seed, long a, long c, long m)
+        {
+            this.seed = seed;
+            this.a = a;
+            this.c = c;
+            this.m = m;
+        }
+
+        public long Next(long minValue, long maxValue, IDistribution distribution)
+        {
+            seed = (a * seed + c) % m;
+            return distribution.NextValue(minValue, maxValue);
+        }
+    }
+
+    class Xorshift
+    {
+        private ulong seed;
+
+        public Xorshift(ulong seed)
+        {
+            this.seed = seed;
+        }
+
+        public ulong Next(ulong minValue, ulong maxValue, IDistribution distribution)
+        {
+            seed ^= seed << 13;
+            seed ^= seed >> 17;
+            seed ^= seed << 5;
+            return (ulong)distribution.NextValue((long)minValue, (long)maxValue);
+        }
+    }
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            LCG lcg = new LCG(1, 2, 3, 4);
+            Xorshift xorshift = new Xorshift(1);
+            IDistribution uniform = new UniformDistribution();
+
+            for (int i = 0; i < 10; i++)
+            {
+                Console.WriteLine("LCG: " + lcg.Next(0, 10, uniform));
+                Console.WriteLine("Xorshift: " + xorshift.Next(0, 10, uniform));
+            }
+
+            Console.ReadLine();
+        }
+    } 
+}
